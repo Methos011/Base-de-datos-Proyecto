@@ -22,10 +22,10 @@ INSERT INTO venta(idProducto, cedulaCliente, cedulaResponsable, cantidad, precio
 VALUES(1,1723456789,1912345678,2,3.00,3.00,'2026-08-02',FALSE,FALSE);
 
 INSERT INTO venta(idProducto, cedulaCliente, cedulaResponsable,cantidad, precioSubtotal, precioTotal,fecha, esFiado, estaHelado)
-VALUES(2,1723456789,1723456789,5,10.00,10.00,'2026-08-03',TRUE,FALSE);
+VALUES(2,1712345678,1987654321,5,10.00,10.00,'2026-08-03',TRUE,FALSE);
 
 INSERT INTO venta(idProducto, cedulaCliente, cedulaResponsable,cantidad, precioSubtotal, precioTotal,fecha, esFiado, estaHelado)
-VALUES(1,1723456789,1912345678,3,4.50,4.50,'2026-08-04',FALSE,TRUE);
+VALUES(1,1723456789,1987654321,3,4.50,4.50,'2026-08-04',FALSE,TRUE);
 
 -- READ/CONSULTAS
 SELECT v.idVenta,c.nombre AS Cliente,p.marca AS Producto,r.nombre AS Responsable,v.cantidad,v.precioTotal,v.fecha
@@ -38,7 +38,7 @@ FROM venta v
     ON v.cedulaResponsable = r.cedula;
 
 SELECT *
-FROM vent
+FROM venta
 WHERE cedulaCliente = 1723456789;
 
 -- UPDATE
