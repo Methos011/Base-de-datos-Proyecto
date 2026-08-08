@@ -67,6 +67,44 @@ def registrar_venta():
     bd.commit()
     bd.close()
     cursor.close()
-    
 
+
+def actualizar_venta():
+    bd = conectar()
+    cursor = bd.cursor()
+
+    print("\n========== ACTUALIZAR VENTA ==========")
+    print("Marcar una venta como pagada")
+    id_venta = int(input("Ingrese el ID de la venta que desea actualizar: "))
+
+    sql = "UPDATE venta SET esFiado = FALSE WHERE idVenta = %s AND esFiado = TRUE"
+        
+    cursor.execute(sql, (id_venta,))
+
+    if cursor.rowcount > 0:
+        bd.commit()
+        print("La venta se ha pagado con éxito.")
+    else:
+        print("No existe una venta con ese ID.")
+            
+    cursor.close()
+    bd.close()
+    
+    
+def eliminar_venta():
+    bd = conectar()
+    cursor = bd.cursor()
+    
+    id = int(input("id de la venta a cancelar"))
+    
+    sql = "DELETE FROM venta where idVenta = %s"
+    
+    cursor.execute(sql,(id,))
+    bd.commit()
+    print("La venta ha sido cancelada con exito")
+    
+    
+    cursor.close()
+    bd.close()
+    
 
