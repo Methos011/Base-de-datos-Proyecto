@@ -2,6 +2,7 @@ from conexion import conectar
 from Clientes.cliente import *
 from Ventas.venta import *
 from Detalles.detalleVenta import menuDetalle
+from ProductoRefrigerador.productoRefrigerador import *
 
 def menu():
     while True:
@@ -10,6 +11,7 @@ def menu():
         print("2. Mostrar menu Responsable")
         print("3. Mostrar menu ventas")
         print("4. Mostrar menú Detalles de Venta")
+        print("5. Mostrar menú Productos en Refrigerador")
 
         print("0. Salir")
 
@@ -23,6 +25,8 @@ def menu():
            menuVenta()
         elif opcion == 4:
             menuDetalle()
+        elif opcion == 5:
+            menuProductoRefrigerador()
         
 
         elif opcion == 0:
