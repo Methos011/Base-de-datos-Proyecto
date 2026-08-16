@@ -1,0 +1,68 @@
+DELIMITER $
+CREATE 	PROCEDURE agregarProveedor(in provNombre varchar(60), in  provRuc char(13),
+ in provTef char(10), in provCorreo varchar(50), in provDireccion varchar(50), in provCiudad varchar(20))
+ BEGIN
+	 DECLARE EXIT HANDLER FOR SQLEXCEPTION
+	 BEGIN
+		ROLLBACK;
+	END;
+
+	START TRANSACTION;
+	IF  (select count(*) from proveedor where RUC = provRuc) = 1 then
+		SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Proveedor ya existente';		
+	ELSE 
+		INSERT INTO proveedor(nombre,RUC,telefono,correo,direccion,ciudad)
+        values(provNombre,provRuc,provTef,provCorreo,provDireccion,provCiudad);
+        COMMIT;
+	END IF;
+END$
+DELIMITER ;
+
+DELIMITER $
+CREATE PROCEDURE eliminarProveedor(in provID char(13))
+BEGIN
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+		ROLLBACK;
+	END;
+    
+    START TRANSACTION;
+    IF (select count(*) from proveedor where idProveedor = provID) = 0 then
+		SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'El proveedor no existe';
+	ELSE 
+		DELETE FROM proveedor where idProveedor = provID;
+        COMMIT;
+    END IF;
+END $
+DELIMITER ;
+
+DELIMITER $
+CREATE PROCEDURE actualizarProveedor(in provID int,in provNombre varchar(60),in provRuc char(13),
+ in provTef char(10), in provCorreo varchar(50), in provDireccion varchar(50), in provCiudad varchar(20))
+BEGIN
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+		ROLLBACK;
+	END;
+    START TRANSACTION;
+    IF (select count(*) from proveedor where idProveedor = provID) = 0 THEN
+		SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Proveedor no existente';
+	ELSE 
+		UPDATE proveedor
+        SET 
+        nombre = provNombre, 
+        RUC = provRuc, 
+        telefono = provTef, 
+        correo = provCorreo, 
+        direccion = provDireccion, 
+        ciudad = provCiudad
+        where idProveedor = provID;
+        COMMIT;
+	END IF;
+END $
+DELIMITER ;
+
+drop procedure actualizarProveedor
