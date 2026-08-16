@@ -1,5 +1,6 @@
 DELIMITER //
-CREATE PROCEDURE agregarCliente(in ced char(10), in nombre char(50), in apellido char(50), in edad int, in telefono char(10))
+CREATE PROCEDURE agregarCliente(in clieCed char(10), in clieNombre char(50), in clieApellido char(50),
+ in clieEdad int, in clieTelef char(10))
 BEGIN
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
 	BEGIN
@@ -7,27 +8,34 @@ BEGIN
 	END;
     
 	START TRANSACTION;
-	IF (length(ced) = 10 and edad > 18) and ((SELECT COUNT(*) FROM cliente WHERE cedula = ced) = 0) then
+	IF length(clieCed) != 10 THEN
+		SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Error: La longitd de la cedula no es la esperada';
+    ELSEIF clieEdad < 18 THEN    
+		SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Error: Es mejor de edad';
+	ELSEIF EXISTS(SELECT 1 FROM cliente WHERE cedula = clieCed) THEN
+		SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Error: el cliente ya existe';
+    ELSE
 		INSERT INTO cliente(cedula,nombre,apellido,edad,telefono)
-        VALUES(ced,nombre,apellido,edad,telefono);
+        VALUES(clieCed,clieNombre,clieApellido,clieEdad,clieTelef);
         COMMIT;
-	ELSE
-		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'se originó un error';
 	END IF;
 END //
 DELIMITER ;
 
 DELIMITER $$
-CREATE PROCEDURE eliminarCliente(in ced char(10))
+CREATE PROCEDURE eliminarCliente(in clieCed char(10))
 BEGIN
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
 		ROLLBACK;
 	END;
     START TRANSACTION;
-	IF (SELECT COUNT(*) FROM cliente WHERE cedula = ced) > 0 then
+	IF EXISTS(SELECT 1 FROM cliente WHERE cedula = clieCed) > 0 then
 		DELETE FROM cliente
-        WHERE cedula = ced;
+        WHERE cedula = clieCed;
         COMMIT;
 	ELSE 
 		SIGNAL SQLSTATE '45000'
@@ -38,16 +46,22 @@ DELIMITER ;
 
 
 DELIMITER $$
-CREATE PROCEDURE actualizarCliente(in ced char(10),in telf char(10))
+CREATE PROCEDURE actualizarCliente(in clieCed char(10), in clieNombre char(50), in clieApellido char(50),
+ in clieEdad int, in clieTelef char(10))
 BEGIN
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
 	BEGIN
 		ROLLBACK;
 	END;
-        
 	START TRANSACTION;
-	IF LENGTH(telf) = 10 and LENGTH(ced) = 10 then
-		UPDATE cliente set Telefono = telf where cedula = ced;
+	IF LENGTH(clieTelef) = 10 and LENGTH(clieCed) = 10 then
+		UPDATE cliente 
+        SET 
+			nombre = clieNombre,
+            apellido = clieApellido,
+            edad = clieEdad,
+            Telefono = clieTelef
+		WHERE cedula = clieCed;
         COMMIT;
 	ELSE
 		SIGNAL SQLSTATE '45000'
