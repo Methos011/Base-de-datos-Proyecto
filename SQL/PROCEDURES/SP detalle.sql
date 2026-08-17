@@ -8,7 +8,6 @@ CREATE PROCEDURE insertarDetalle(
     IN p_precioUnitario DECIMAL(10,2)
 )
 BEGIN
-    DECLARE v_subtotal DECIMAL(10,2);
     
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -17,9 +16,6 @@ BEGIN
 
     START TRANSACTION;
 
-    -- Cálculo automático del subtotal
-    SET v_subtotal = p_cantidad * p_precioUnitario;
-
     IF NOT EXISTS(SELECT 1 FROM Producto WHERE IdProducto = p_idProducto) THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: El producto no existe';
     ELSEIF NOT EXISTS(SELECT 1 FROM Venta WHERE idVenta = p_idVenta) THEN
@@ -27,7 +23,7 @@ BEGIN
     ELSEIF EXISTS(SELECT 1 FROM Detalle WHERE IdProducto = p_idProducto AND IdVenta = p_idVenta) THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: El detalle ya se encuentra registrado';
     ELSE
-        INSERT INTO Detalle(IdProducto, IdVenta, EsHelado, Cantidad, PrecioUnitario, PrecioSubtotal)
+        INSERT INTO Detalle(IdProducto, IdVenta, EsHelado, Cantidad, PrecioUnitario, Subtotal)
         VALUES(p_idProducto, p_idVenta, p_esHelado, p_cantidad, p_precioUnitario, v_subtotal);
         COMMIT;
     END IF;
@@ -41,10 +37,9 @@ CREATE PROCEDURE actualizarDetalle(
     IN p_idVenta INT,
     IN p_esHelado BOOLEAN,
     IN p_cantidad INT,
-    IN p_precioUnitario DECIMAL(10,2)
+    IN p_precioUnitario FLOAT
 )
 BEGIN
-    DECLARE v_subtotal DECIMAL(10,2);
 
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -53,14 +48,12 @@ BEGIN
 
     START TRANSACTION;
 
-    SET v_subtotal = p_cantidad * p_precioUnitario;
-
     IF EXISTS(SELECT 1 FROM Detalle WHERE IdProducto = p_idProducto AND IdVenta = p_idVenta) THEN
         UPDATE Detalle
-        SET EsHelado = p_esHelado,
-            Cantidad = p_cantidad,
-            PrecioUnitario = p_precioUnitario,
-            PrecioSubtotal = v_subtotal
+        SET esHelado = p_esHelado,
+            cantidad = p_cantidad,
+            precioUnitario = p_precioUnitario,
+            subtotal = v_subtotal
         WHERE IdProducto = p_idProducto AND IdVenta = p_idVenta;
         COMMIT;
     ELSE
