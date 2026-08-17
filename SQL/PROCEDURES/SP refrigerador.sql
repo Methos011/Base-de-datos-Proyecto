@@ -1,54 +1,84 @@
-DELIMITER $
-CREATE PROCEDURE agregarRefrigerador(in refriNombre varchar(50), in refriCapacidadBotella int, in refriCapacidadLata int)
-BEGIN
-	DECLARE EXIT HANDLER FOR SQLEXCEPTION
-    BEGIN
-		ROLLBACK;
-	END;
-    
-    START TRANSACTION;
-		INSERT INTO refrigerador(nombre,capacidadBotellas,capcidadLatas)
-		VALUES(refriNombre,refriCapacidadBotella,refriCapacidadLata);
-		COMMIT;    
-END $
-DELIMITER ;
+DELIMITER //
 
-DELIMITER $
-CREATE PROCEDURE eliminarRefrigerador(in RefriId int)
+-- Procedimiento: Agregar Refrigerador
+CREATE PROCEDURE agregarRefrigerador(
+    IN refriNombre VARCHAR(50), 
+    IN refriCapacidadBotella INT, 
+    IN refriCapacidadLata INT
+)
 BEGIN
-	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
-		ROLLBACK;
-	END;
-    
-    START TRANSACTION;
-    IF	(select count(*) from refrigerador where idRefrigerador = RefriId) = 0 then
-		SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'El refrigerador no existe';
-    ELSE    
-		DELETE FROM refrigerador where idRefrigerador = RefriId;
-        COMMIT;
-	END IF;
-END $
-DELIMITER ;
+        ROLLBACK;
+        RESIGNAL;
+    END;
 
-DELIMITER $
-CREATE PROCEDURE actualizarRefrigerador(in refriId int ,in refriNombre varchar(50), 
-in refriCapacidadBotella int, in refriCapacidadLata int)
-BEGIN
-	DECLARE EXIT HANDLER FOR SQLEXCEPTION
-    BEGIN
-		ROLLBACK;
-	END;
-    
     START TRANSACTION;
-    IF	(select count(*) from refrigerador where idRefrigerador = RefriId) = 0 then
-		SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'El refrigerador no existe';
-	ELSE 
-		UPDATE refrigerador set nombre = refriNombre, capacidadBotellas = refriCapacidadBotella,
-        capacidadLata = refriCapacidadLata;
+
+    IF refriCapacidadBotella < 0 OR refriCapacidadLata < 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Error: Las capacidades deben ser mayores o iguales a 0';
+    ELSE
+        INSERT INTO refrigerador(nombre, capacidadBotellas, capacidadLatas)
+        VALUES (refriNombre, refriCapacidadBotella, refriCapacidadLata);
         COMMIT;
-	END IF;
-END $
+    END IF;
+END //
+
+-- Procedimiento: Eliminar Refrigerador
+CREATE PROCEDURE eliminarRefrigerador(
+    IN refriId INT
+)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+
+    IF NOT EXISTS(SELECT 1 FROM refrigerador WHERE idRefrigerador = refriId) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Error: El refrigerador a eliminar no existe';
+    ELSE
+        DELETE FROM refrigerador 
+        WHERE idRefrigerador = refriId;
+        COMMIT;
+    END IF;
+END //
+
+-- Procedimiento: Actualizar Refrigerador
+CREATE PROCEDURE actualizarRefrigerador(
+    IN refriId INT, 
+    IN refriNombre VARCHAR(50), 
+    IN refriCapacidadBotella INT, 
+    IN refriCapacidadLata INT
+)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+
+    IF NOT EXISTS(SELECT 1 FROM refrigerador WHERE idRefrigerador = refriId) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Error: El refrigerador a actualizar no existe';
+    ELSEIF refriCapacidadBotella < 0 OR refriCapacidadLata < 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Error: Las capacidades deben ser mayores o iguales a 0';
+    ELSE
+        UPDATE refrigerador 
+        SET 
+            nombre = refriNombre, 
+            capacidadBotellas = refriCapacidadBotella, 
+            capacidadLatas = refriCapacidadLata
+        WHERE idRefrigerador = refriId;
+        COMMIT;
+    END IF;
+END //
+
 DELIMITER ;
