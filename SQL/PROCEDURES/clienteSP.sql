@@ -1,71 +1,100 @@
 DELIMITER //
-CREATE PROCEDURE agregarCliente(in clieCed char(10), in clieNombre char(50), in clieApellido char(50),
- in clieEdad int, in clieTelef char(10))
-BEGIN
-	DECLARE EXIT HANDLER FOR SQLEXCEPTION
-	BEGIN
-		ROLLBACK;
-	END;
-    
-	START TRANSACTION;
-	IF length(clieCed) != 10 THEN
-		SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Error: La longitd de la cedula no es la esperada';
-    ELSEIF clieEdad < 18 THEN    
-		SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Error: Es mejor de edad';
-	ELSEIF EXISTS(SELECT 1 FROM cliente WHERE cedula = clieCed) THEN
-		SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Error: el cliente ya existe';
-    ELSE
-		INSERT INTO cliente(cedula,nombre,apellido,edad,telefono)
-        VALUES(clieCed,clieNombre,clieApellido,clieEdad,clieTelef);
-        COMMIT;
-	END IF;
-END //
-DELIMITER ;
 
-DELIMITER $$
-CREATE PROCEDURE eliminarCliente(in clieCed char(10))
+-- Procedimiento: Agregar Cliente
+CREATE PROCEDURE agregarCliente(
+    IN clieCed CHAR(10), 
+    IN clieNombre VARCHAR(50), 
+    IN clieApellido VARCHAR(50),
+    IN clieEdad INT, 
+    IN clieTelef CHAR(10)
+)
 BEGIN
-	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
-		ROLLBACK;
-	END;
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
     START TRANSACTION;
-	IF EXISTS(SELECT 1 FROM cliente WHERE cedula = clieCed) > 0 then
-		DELETE FROM cliente
+
+    IF LENGTH(clieCed) != 10 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Error: La longitud de la cedula debe ser de 10 caracteres';
+    ELSEIF clieEdad < 18 THEN    
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Error: El cliente es menor de edad';
+    ELSEIF EXISTS(SELECT 1 FROM cliente WHERE cedula = clieCed) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Error: El cliente ya existe';
+    ELSE
+        INSERT INTO cliente(cedula, nombre, apellido, edad, telefono)
+        VALUES (clieCed, clieNombre, clieApellido, clieEdad, clieTelef);
+        COMMIT;
+    END IF;
+END //
+
+-- Procedimiento: Eliminar Cliente
+CREATE PROCEDURE eliminarCliente(
+    IN clieCed CHAR(10)
+)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+
+    IF EXISTS(SELECT 1 FROM cliente WHERE cedula = clieCed) THEN
+        DELETE FROM cliente
         WHERE cedula = clieCed;
         COMMIT;
-	ELSE 
-		SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'error al eliminar el cliente';
-	END IF;
-END $$
-DELIMITER ;
+    ELSE 
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Error: El cliente a eliminar no existe';
+    END IF;
+END //
 
-
-DELIMITER $$
-CREATE PROCEDURE actualizarCliente(in clieCed char(10), in clieNombre char(50), in clieApellido char(50),
- in clieEdad int, in clieTelef char(10))
+-- Procedimiento: Actualizar Cliente
+CREATE PROCEDURE actualizarCliente(
+    IN clieCed CHAR(10), 
+    IN clieNombre VARCHAR(50), 
+    IN clieApellido VARCHAR(50),
+    IN clieEdad INT, 
+    IN clieTelef CHAR(10)
+)
 BEGIN
-	DECLARE EXIT HANDLER FOR SQLEXCEPTION
-	BEGIN
-		ROLLBACK;
-	END;
-	START TRANSACTION;
-	IF LENGTH(clieTelef) = 10 and LENGTH(clieCed) = 10 then
-		UPDATE cliente 
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+
+    IF NOT EXISTS(SELECT 1 FROM cliente WHERE cedula = clieCed) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Error: El cliente a actualizar no existe';
+    ELSEIF LENGTH(clieCed) != 10 OR LENGTH(clieTelef) != 10 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Error: La longitud de la cedula o telefono debe ser de 10 caracteres';
+    ELSEIF clieEdad < 18 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Error: El cliente debe ser mayor de edad';
+    ELSE
+        UPDATE cliente 
         SET 
-			nombre = clieNombre,
+            nombre = clieNombre,
             apellido = clieApellido,
             edad = clieEdad,
-            Telefono = clieTelef
-		WHERE cedula = clieCed;
+            telefono = clieTelef
+        WHERE cedula = clieCed;
         COMMIT;
-	ELSE
-		SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Error al actualizar el numero del cliente';
+    END IF;
+END //
+
+DELIMITER ; 
 	END IF;
 END $$
 DELIMITER ;
