@@ -1,4 +1,5 @@
 -- REPORTE 1: Historial Detallado de Ventas (5 Tablas)
+CREATE VIEW detalleVentas as
 SELECT 
     v.idVenta AS 'ID Venta',
     v.fecha AS 'Fecha',
@@ -18,6 +19,7 @@ INNER JOIN producto p ON d.idProducto = p.idProducto
 ORDER BY v.fecha DESC;
 
 -- REPORTE 2: Inventario de Productos por Proveedor y Refrigerador (4 Tablas)
+CREATE VIEW inventarioProducto as
 SELECT 
     p.idProducto AS 'ID Producto',
     p.marca AS 'Marca / Producto',
@@ -33,6 +35,7 @@ INNER JOIN refrigerador ref ON pr.idRefrigerador = ref.idRefrigerador
 ORDER BY prov.nombre ASC, p.marca ASC;
 
 -- REPORTE 3: Resumen de Compras por Cliente y Responsable (4 Tablas)
+CREATE VIEW resumenCompras as
 SELECT 
     c.cedula AS 'Cedula Cliente',
     CONCAT(c.nombre, ' ', c.apellido) AS 'Nombre Cliente',
@@ -49,6 +52,7 @@ GROUP BY c.cedula, c.nombre, c.apellido, c.Telefono, r.nombre, r.apellido
 ORDER BY `Monto Total Gastado ($)` DESC;
 
 -- REPORTE 4: Desglose de Ventas por Producto y Proveedor (5 Tablas)
+CREATE VIEW detalleVentasProducto as
 SELECT 
     prov.nombre AS 'Proveedor',
     p.marca AS 'Marca Producto',
