@@ -1,72 +1,95 @@
-DELIMITER $
-CREATE PROCEDURE agregarReponsable(
-in respCed char(10), in respoNombre varchar(50), in respApellido varchar(50), in respTelef char(10))
-	BEGIN
-	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+DELIMITER //
+
+-- Procedimiento: Agregar Responsable
+CREATE PROCEDURE agregarResponsable(
+    IN respCed CHAR(10), 
+    IN respNombre VARCHAR(50), 
+    IN respApellido VARCHAR(50), 
+    IN respTelef CHAR(10)
+)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
-		ROLLBACK;
-	END;
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
     START TRANSACTION;
-		IF length(respCed) != 10 THEN
-			SIGNAL SQLSTATE '45000'
-			SET MESSAGE_TEXT = 'Error: La longitd de la cedula no es la esperada';
-		ELSEIF EXISTS(SELECT 1 FROM responsable WHERE cedula = respCed) THEN
-			SIGNAL SQLSTATE '45000'
-			SET MESSAGE_TEXT = 'Error: el responsable ya existe';
-		ELSE
-			INSERT INTO responsable(cedula,nombre,apellido,telefono)
-			VALUES(respCed,respNombre,respApellido,respTelef);
-			COMMIT;
-		END IF;
-	END $
-DELIMITER ;
 
-DELIMITER $
-	CREATE PROCEDURE eliminarResponsable(in respCed char(10))
+    IF LENGTH(respCed) != 10 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Error: La longitud de la cedula debe ser de 10 caracteres';
+    ELSEIF LENGTH(respTelef) != 10 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Error: La longitud del telefono debe ser de 10 digitos';
+    ELSEIF EXISTS(SELECT 1 FROM responsable WHERE cedula = respCed) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Error: El responsable ya existe';
+    ELSE
+        INSERT INTO responsable(cedula, nombre, apellido, telefono)
+        VALUES (respCed, respNombre, respApellido, respTelef);
+        COMMIT;
+    END IF;
+END //
+
+-- Procedimiento: Eliminar Responsable
+CREATE PROCEDURE eliminarResponsable(
+    IN respCed CHAR(10)
+)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
-		DECLARE EXIT HANDLER FOR SQLEXCEPTION
-        BEGIN
-			ROLLBACK;
-		END;
-        START TRANSACTION;
-        IF NOT EXISTS(SELECT 1 FROM responsbale WHERE cedula = respCed) THEN
-			SIGNAL SQLSTATE '45000' 
-            SET MESSAGE_TEXT = 'El responsable no existe';
-		ELSE 
-			DELETE FROM responsable 
-            WHERE cedula = respCed;
-            COMMIT;
-		END IF;
-    END $
-DELIMITER ;
+        ROLLBACK;
+        RESIGNAL;
+    END;
 
-DELIMITER $
-CREATE PROCEDURE actualizarResponsable(in respCed char(10),
- in respoNombre varchar(50), in respApellido varchar(50), in respTelef char(10))
-	BEGIN
-		DECLARE EXIT HANDLER FOR SQLEXCEPTION
-        BEGIN
-			ROLLBACK;
-		END;
-        
-        START TRANSACTION;
-        IF NOT EXISTS(SELECT 1 FROM responsable WHERE cedula = respCed) THEN
-			SIGNAL SQLSTATE '45000' 
-            SET MESSAGE_TEXT = 'Error: El responsable no existe';
-        ELSEIF LENGTH(respCed) != 10  then
-			SIGNAL SQLSTATE '45000' 
-            SET MESSAGE_TEXT = 'Error: La longitud de la cedula no es la esperada';
-		ELSEIF LENGTH(respTelef) != 19 then
-			SIGNAL SQLSTATE '45000' 
-            SET MESSAGE_TEXT = 'Error: La longitud del numero telefonico no es el esperado';
-        ELSE
-            UPDATE responsable set telefono= tef where cedula = ced;
-            COMMIT;
-		END IF;
-	END $
-DELIMITER ;
+    START TRANSACTION;
 
-drop procedure agregarReponsable;
-drop procedure eliminarResponsable;
-drop procedure actualizarResponsableTef;
+    IF NOT EXISTS(SELECT 1 FROM responsable WHERE cedula = respCed) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Error: El responsable a eliminar no existe';
+    ELSE 
+        DELETE FROM responsable 
+        WHERE cedula = respCed;
+        COMMIT;
+    END IF;
+END //
+
+-- Procedimiento: Actualizar Responsable
+CREATE PROCEDURE actualizarResponsable(
+    IN respCed CHAR(10),
+    IN respNombre VARCHAR(50), 
+    IN respApellido VARCHAR(50), 
+    IN respTelef CHAR(10)
+)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+
+    IF NOT EXISTS(SELECT 1 FROM responsable WHERE cedula = respCed) THEN
+        SIGNAL SQLSTATE '45000';
+        SET MESSAGE_TEXT = 'Error: El responsable a actualizar no existe';
+    ELSEIF LENGTH(respCed) != 10 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Error: La longitud de la cedula debe ser de 10 caracteres';
+    ELSEIF LENGTH(respTelef) != 10 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Error: La longitud del telefono debe ser de 10 digitos';
+    ELSE
+        UPDATE responsable 
+        SET 
+            nombre = respNombre,
+            apellido = respApellido,
+            telefono = respTelef
+        WHERE cedula = respCed;
+        COMMIT;
+    END IF;
+END //
+
+DELIMITER ;
 
